@@ -26,6 +26,38 @@ public class PrimalityTest extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        final int testNumber = intent.getIntExtra(EXTRA_NUMBER, INVALID);
+        final PendingIntent pendingIntent = intent.getParcelableExtra(PENDING_INTENT);
+
+        Thread testThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                boolean isPrime = true;
+                if (testNumber <= 1) {
+                    isPrime = false;
+                    Log.d(LOG_TAG, "testNumber is " + testNumber + ", so not prime");
+                } else {
+                    for (int i = 2; i < testNumber; ++i) {
+                        if (testNumber % i == 0) {
+                            Log.d(LOG_TAG, i + " divides " + testNumber + ", so not prime");
+                            isPrime = false;
+                            break;
+                        }
+                    }
+                }
+                try {
+                    int code = isPrime ? RESULT_PRIME : RESULT_NOT_PRIME;
+                    Log.d(LOG_TAG, "isPrime: " + isPrime);
+                    Log.d(LOG_TAG, "code: " + code);
+                    pendingIntent.send(code);
+                } catch (PendingIntent.CanceledException e) {
+                    e.printStackTrace();
+                }
+                stopSelf();
+            }
+        });
+        testThread.start();
+
         return super.onStartCommand(intent, flags, startId);
     }
 

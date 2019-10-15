@@ -52,6 +52,9 @@ public class MainActivity extends AppCompatActivity {
             public void afterTextChanged(Editable s) {
             }
         });
+
+        mReceiver = new ResultReceiver();
+        registerReceiver(mReceiver, new IntentFilter(COMPUTED_PRIMALITY));
     }
 
     private int getNumber() {
@@ -72,6 +75,12 @@ public class MainActivity extends AppCompatActivity {
         if (view == mCheck) {
             mCheck.setEnabled(false);
             mResult.setText("Calculating...");
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0,
+                    new Intent(COMPUTED_PRIMALITY), 0);
+            Intent intent = new Intent(this, PrimalityTest.class);
+            intent.putExtra(PrimalityTest.PENDING_INTENT, pendingIntent);
+            intent.putExtra(PrimalityTest.EXTRA_NUMBER, getNumber());
+            startService(intent);
         }
     }
 
@@ -82,6 +91,10 @@ public class MainActivity extends AppCompatActivity {
     private class ResultReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
+            int resultCode = getResultCode();
+            Log.d(LOG_TAG, "onReceive\tresultCode: " + resultCode);
+            MainActivity.this.setResult(resultCode == PrimalityTest.RESULT_PRIME);
+            mCheck.setEnabled(true);
         }
     }
 }
